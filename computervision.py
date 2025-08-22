@@ -1,5 +1,8 @@
 import cv2 as cv
 import numpy as np
+import nanosurf as nsf
+
+
 
 # --- inputs ---
 frame =  cv.imread(r"C:\Users\spill\Downloads\sample_screenshot.png")          # your grab function
