@@ -1,10 +1,17 @@
 import cv2 as cv
 import numpy as np
-import nanosurf as nsf
-
+import pyautogui
 
 
 # --- inputs ---
+top_view_x = -708
+top_view_y = 264
+top_view_width = 630
+top_view_height = 470
+
+screenshot = pyautogui.screenshot(region=(top_view_x, top_view_y, top_view_width, top_view_height))
+screenshot.save("screenshot.png")
+
 frame =  cv.imread(r"C:\Users\spill\Downloads\sample_screenshot.png")          # your grab function
 flat = cv.imread(r"C:\Users\spill\Downloads\closeup empty sample.png")          # empty-dish reference, same exposure
 
