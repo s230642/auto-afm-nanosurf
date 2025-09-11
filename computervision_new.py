@@ -70,6 +70,11 @@ def findBiggestSkincell(image):
         return (cx, cy)
     else:
         return None  # no valid contour found
+    
+
+def findBiggestSkincellFileName(file):
+    image = cv2.imread(file)
+    return findBiggestSkincell(image)
 
 
 def findBiggestSkincellVisual(image):
