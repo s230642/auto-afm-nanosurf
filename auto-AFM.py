@@ -17,6 +17,28 @@ while True:
     if line == "READY":
         break
 
+def servomove(move_distance, calibration_factor):
+    x, y = move_distance
+    stop = 'S'
+
+    def move_with_repeats(command, duration):
+        start = time.time()
+        while time.time() - start < duration:
+            ArduinoUno.write(command.encode())
+            time.sleep(0.02)  # send every 20 ms (faster than Arduino timeout)
+        ArduinoUno.write(stop.encode())
+
+    if y > 0:
+        move_with_repeats('U', abs(y) * calibration_factor)
+    elif y < 0:
+        move_with_repeats('D', abs(y) * calibration_factor)
+
+    if x > 0:
+        move_with_repeats('R', abs(x) * calibration_factor)
+    elif x < 0:
+        move_with_repeats('L', abs(x) * calibration_factor)
+
+
 def tupleSubtract(t1, t2):
     return t1[0] - t2[0] , t1[1] - t2[1]
 
@@ -51,5 +73,6 @@ print("Distance to move ", move_distance)
 
 ##Would like to only use 1 single Arduino //TODO get code for "Uno"
 
-data = 'U'  # string you want to send
-ArduinoUno.write(data.encode())  # encode string to bytes before writing
+calibration_factor = 0.01 
+
+servomove(move_distance,calibration_factor)
