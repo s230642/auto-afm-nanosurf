@@ -147,14 +147,6 @@ def findBiggestSkincellVisual(image):
     else:
         return None, image  # no valid contour found, just return original
 
-image = cv2.imread("images\currentPosition_1.JPG")
-coordinates, output = findBiggestSkincellVisual(image)
-cv2.imshow("Original image with contours", image)
-cv2.imshow("Output from cv", output)
-print(coordinates)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
 
 ##### Experiments on finding cantelever tip ######
 """
