@@ -1,63 +1,60 @@
 import cv2 
 from numpy import pi, sum as npsum
 
-
-########## EXTRA CODE BELOW ###########
-"""
-image = cv2.imread("images\currentPosition_1.JPG")
-cv2.imshow("Original image", image)
-
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-_, binary = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
-
-# Find contours
-contours, hierarchy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-
-# Convert to BGR so we can draw colored contours
-output = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
-
-# Draw contours and print areas
-for i, contour in enumerate(contours):
-    area = cv2.contourArea(contour)
-    if area>500.0 and area<5000.0:
-        cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)
-        cv2.drawContours(output, [contour], -1, (0, 255, 0), 2)
-        print(f"Contour no. {i} has area: {area}")
-        area = cv2.contourArea(contour)
-        perimeter = cv2.arcLength(contour, True)
-        if perimeter == 0:
-            continue  # avoid division by zero
-        
-        circularity = 4 * pi * (area / (perimeter * perimeter))
-        print(f"Contour no. {i} has circularity: {circularity}")
-        print("---------------")
-        
-        # Calculate contour centroid
-        M = cv2.moments(contour)
-        if M["m00"] != 0:
-            cx = int(M["m10"] / M["m00"])
-            cy = int(M["m01"] / M["m00"])
-        else:
-            cx, cy = 0, 0
-        
-        # Put index number at centroid
-        cv2.putText(output, str(i), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-
-# Show results
-cv2.imshow("Original image with contours", image)
-cv2.imshow("Contours Highlighted", output)
-
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-"""
-
 #########Functions in use ############
 
+def labelCurrentImage():
+    image = cv2.imread("images/currentPosition.JPG")
+    cv2.imshow("Original image", image)
+
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    _, binary = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
+
+    # Find contours
+    contours, hierarchy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+
+    # Convert to BGR so we can draw colored contours
+    output = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
+
+    # Draw contours and print areas
+    for i, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        if area>500.0 and area<5000.0:
+            cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)
+            cv2.drawContours(output, [contour], -1, (0, 255, 0), 2)
+            print(f"Contour no. {i} has area: {area}")
+            area = cv2.contourArea(contour)
+            perimeter = cv2.arcLength(contour, True)
+            if perimeter == 0:
+                continue  # avoid division by zero
+            
+            circularity = 4 * pi * (area / (perimeter * perimeter))
+            print(f"Contour no. {i} has circularity: {circularity}")
+            print("---------------")
+            
+            # Calculate contour centroid
+            M = cv2.moments(contour)
+            if M["m00"] != 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+            else:
+                cx, cy = 0, 0
+            
+            # Put index number at centroid
+            cv2.putText(output, str(i), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+
+    # Show results
+    cv2.imshow("Original image with contours", image)
+    cv2.imshow("Contours Highlighted", output)
+
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
+
 def onSkincell(image):
-    image = cv2.imread("images\currentPosition_1.JPG")
     cropped_image = image[300:330, 250:340] # crops like (y1:y2, x1:x2)
     gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
 
@@ -65,7 +62,7 @@ def onSkincell(image):
 
 def onSkincellFile(file):
     image = cv2.imread(file)
-    return onSkincellFile(image)
+    return onSkincell(image)
 
 
 def findBiggestSkincell(image):
@@ -158,8 +155,14 @@ def findBiggestSkincellVisual(image):
     else:
         return None, image  # no valid contour found, just return original
 
+def fullDebug():
+    image = cv2.imread("images/currentPosition.jpg")
+    coordinates, output = findBiggestSkincellVisual(image)
+    print(coordinates)
+    cv2.imshow("Selected area", output)
+    labelCurrentImage()
 
-
+#fullDebug()
 
 ##### Experiments on finding cantelever tip ######
 """

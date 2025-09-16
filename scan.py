@@ -1,6 +1,7 @@
-approach
+from computervision_new import findBiggestSkincellFileName, onSkincellFile
+import cv2
 
-scan
+cv2.imread("images/currentPosition.JPG")
 
-retract
-
+oncell = onSkincellFile("images/currentPosition.JPG")
+print("Currently on skincell is: ", oncell)
