@@ -1,9 +1,11 @@
 import cv2 
+from numpy import pi
 
-
-########## EXTRA CODE BELOW ###########
 """
-image = cv2.imread("images\BloblTargit.JPG")
+########## EXTRA CODE BELOW ###########
+import numpy as np
+
+image = cv2.imread("images\currentPosition_1.JPG")
 cv2.imshow("Original image", image)
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -23,7 +25,16 @@ for i, contour in enumerate(contours):
     if area>500.0 and area<5000.0:
         cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)
         cv2.drawContours(output, [contour], -1, (0, 255, 0), 2)
-        print(f"Contour {i} area: {area}")
+        print(f"Contour no. {i} has area: {area}")
+        area = cv2.contourArea(contour)
+        perimeter = cv2.arcLength(contour, True)
+        if perimeter == 0:
+            continue  # avoid division by zero
+        
+        circularity = 4 * np.pi * (area / (perimeter * perimeter))
+        circularity = np.round(circularity,3)
+        print(f"Contour no. {i} has circularity: {circularity}")
+        print("---------------")
         
         # Calculate contour centroid
         M = cv2.moments(contour)
@@ -42,7 +53,9 @@ cv2.imshow("Contours Highlighted", output)
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
 """
+
 
 def findBiggestSkincell(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -54,9 +67,21 @@ def findBiggestSkincell(image):
 
     for contour in contours:
         area = cv2.contourArea(contour)
-        if 500.0 < area < 5000.0 and area > max_area:
-            biggest_contour = contour
-            max_area = area
+        perimeter = cv2.arcLength(contour, True)
+        
+        if perimeter == 0:
+            continue  # avoid division by zero
+        
+        circularity = 4 * pi * (area / (perimeter * perimeter))
+        
+        # Check both area range AND circularity
+        if 500.0 < area < 5000.0 and circularity > 0.2:
+            cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)  # green contour
+            
+            if area > max_area:
+                biggest_contour = contour
+                max_area = area
+
 
     if biggest_contour is not None:
         M = cv2.moments(biggest_contour)
@@ -91,8 +116,17 @@ def findBiggestSkincellVisual(image):
     # Draw all contours within area limits
     for contour in contours:
         area = cv2.contourArea(contour)
-        if 500.0 < area < 5000.0:
+        perimeter = cv2.arcLength(contour, True)
+        
+        if perimeter == 0:
+            continue  # avoid division by zero
+        
+        circularity = 4 * pi * (area / (perimeter * perimeter))
+        
+        # Check both area range AND circularity
+        if 500.0 < area < 5000.0 and circularity > 0.2:
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)  # green contour
+            
             if area > max_area:
                 biggest_contour = contour
                 max_area = area
@@ -112,6 +146,15 @@ def findBiggestSkincellVisual(image):
         return (cx, cy), image  # return center + annotated image
     else:
         return None, image  # no valid contour found, just return original
+
+image = cv2.imread("images\currentPosition_1.JPG")
+coordinates, output = findBiggestSkincellVisual(image)
+cv2.imshow("Original image with contours", image)
+cv2.imshow("Output from cv", output)
+print(coordinates)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
 
 ##### Experiments on finding cantelever tip ######
 """
