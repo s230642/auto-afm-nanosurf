@@ -1,10 +1,9 @@
 import cv2 
-from numpy import pi
+from numpy import pi, sum as npsum
 
-"""
+
 ########## EXTRA CODE BELOW ###########
-import numpy as np
-
+"""
 image = cv2.imread("images\currentPosition_1.JPG")
 cv2.imshow("Original image", image)
 
@@ -31,8 +30,7 @@ for i, contour in enumerate(contours):
         if perimeter == 0:
             continue  # avoid division by zero
         
-        circularity = 4 * np.pi * (area / (perimeter * perimeter))
-        circularity = np.round(circularity,3)
+        circularity = 4 * pi * (area / (perimeter * perimeter))
         print(f"Contour no. {i} has circularity: {circularity}")
         print("---------------")
         
@@ -55,6 +53,19 @@ cv2.waitKey(0)
 cv2.destroyAllWindows()
 
 """
+
+#########Functions in use ############
+
+def onSkincell(image):
+    image = cv2.imread("images\currentPosition_1.JPG")
+    cropped_image = image[300:330, 250:340] # crops like (y1:y2, x1:x2)
+    gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+
+    return npsum(gray)<300000 #DARK IMAGE MEANS MORE SKIN
+
+def onSkincellFile(file):
+    image = cv2.imread(file)
+    return onSkincellFile(image)
 
 
 def findBiggestSkincell(image):
@@ -146,6 +157,8 @@ def findBiggestSkincellVisual(image):
         return (cx, cy), image  # return center + annotated image
     else:
         return None, image  # no valid contour found, just return original
+
+
 
 
 ##### Experiments on finding cantelever tip ######
