@@ -162,7 +162,7 @@ def fullDebug():
     cv2.imshow("Selected area", output)
     labelCurrentImage()
 
-#fullDebug()
+fullDebug()
 
 ##### Experiments on finding cantelever tip ######
 """

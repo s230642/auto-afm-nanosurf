@@ -1,16 +1,21 @@
 import serial
 import time
 
-ArduinoUno = serial.Serial("COM7", 9600, timeout=1)
+#ArduinoUno = serial.Serial("COM7", 9600, timeout=1)
 
 
-print("Connected")
+#print("Connected")
 
+def move_with_repeats(command, duration):
+        stop = 'S'
+        print("Moving ", command)
+        start = time.time()
+        while time.time() - start < duration:
+            ArduinoUno.write(command.encode())
+            time.sleep(0.02)  # send every 20 ms (faster than Arduino timeout)
+        ArduinoUno.write(stop.encode())
 
-data = 'U'  # string you want to send
+def sign(n):
+    return (n > 0) - (n < 0)
 
-for i in range(10):
-    ArduinoUno.write(data.encode())  # encode string to bytes before writing
-    print("Sending U")
-    time.sleep(0.5)
-
+print(sign(6) == sign(0))
