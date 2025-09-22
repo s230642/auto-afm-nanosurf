@@ -9,7 +9,7 @@ def labelCurrentImage():
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    _, binary = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
+    _, binary = cv2.threshold(gray, 115, 255, cv2.THRESH_BINARY)
 
     # Find contours
     contours, hierarchy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -67,7 +67,7 @@ def onSkincellFile(file):
 
 def findBiggestSkincell(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, binary = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
+    _, binary = cv2.threshold(gray, 115, 255, cv2.THRESH_BINARY)
     contours, _ = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     biggest_contour = None
@@ -83,7 +83,7 @@ def findBiggestSkincell(image):
         circularity = 4 * pi * (area / (perimeter * perimeter))
         
         # Check both area range AND circularity
-        if 500.0 < area < 5000.0 and circularity > 0.2:
+        if 500.0 < area < 5000.0 and circularity > 0.17:
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)  # green contour
             
             if area > max_area:
@@ -113,7 +113,7 @@ def findBiggestSkincellFileName(file):
 def findBiggestSkincellVisual(image):
     # Convert to grayscale and threshold
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, binary = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
+    _, binary = cv2.threshold(gray, 115, 255, cv2.THRESH_BINARY)
 
     # Find contours
     contours, _ = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -132,7 +132,7 @@ def findBiggestSkincellVisual(image):
         circularity = 4 * pi * (area / (perimeter * perimeter))
         
         # Check both area range AND circularity
-        if 500.0 < area < 5000.0 and circularity > 0.2:
+        if 500.0 < area < 5000.0 and circularity > 0.17:
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)  # green contour
             
             if area > max_area:
@@ -161,6 +161,8 @@ def fullDebug():
     print(coordinates)
     cv2.imshow("Selected area", output)
     labelCurrentImage()
+    cv2.waitKey()
+    cv2.destroyAllWindows()
 
 fullDebug()
 
