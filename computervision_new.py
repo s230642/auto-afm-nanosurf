@@ -70,10 +70,10 @@ def labelCurrentImage():
 
 
 def onSkincell(image):
-    cropped_image = image[300:330, 250:340] # crops like (y1:y2, x1:x2)
+    cropped_image = image[310:330, 280:325] # crops like (y1:y2, x1:x2)
     gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
 
-    return npsum(gray)<300000 #DARK IMAGE MEANS MORE SKIN
+    return npsum(gray)<85000 #DARK IMAGE MEANS MORE SKIN
 
 def onSkincellFile(file):
     image = cv2.imread(file)
@@ -183,3 +183,4 @@ def fullDebug():
     cv2.waitKey()
     cv2.destroyAllWindows()
 
+#fullDebug()

@@ -26,7 +26,7 @@ def servomove(move_distance, calibration_factor, backlash):
         start = time.time()
         while time.time() - start < duration:
             ArduinoUno.write(command.encode())
-            time.sleep(0.02)  # send every 20 ms (faster than Arduino timeout)
+            time.sleep(0.01)  # send every 10 ms (faster than Arduino timeout)
         ArduinoUno.write(stop.encode())
 
     if y < 0:
@@ -77,16 +77,44 @@ def tupleSubtract(t1, t2):
     return t1[0] - t2[0] , t1[1] - t2[1]
 
 def scan():
-    print("Scanning is not yet implemented") #//TODO
+    aprooach_button = -1588, 82 #Screen location
+    print("Starting approach and then imageing")
+    pyautogui.moveTo(aprooach_button[0] , aprooach_button[1], duration=0.2)
+    time.sleep(1)
+    print("Sending click...")
+    ArduinoDue.write(b"CLICK\n")
+    print("For now, wait 20 minutes, then retract and keep going")
+    time.sleep(60*20)
+    print("We should be done imaging now!, stopping")
+    pyautogui.moveTo(-1377, 85, duration=0.2) #STOP button
+    time.sleep(1)
+    print("Sending click...")
+    ArduinoDue.write(b"CLICK\n")
+    time.sleep(3)
+    #Withdraw twice //TODO
+    #print("Withdrawing")
+    #pyautogui.moveTo(-1549, 78, duration=0.2)
+    #time.sleep(1)
+    #print("Sending click...")
+    #ArduinoDue.write(b"CLICK\n")
+    #time.sleep(20)
+    print("Withdrawing")
+    pyautogui.moveTo(-1549, 78, duration=0.2) #Retract button
+    time.sleep(1)
+    print("Sending click...")
+    ArduinoDue.write(b"CLICK\n")
+    time.sleep(20)
+    print("Scan and withdraw done")
+
 
 def saveImage(): #Highly sensitive to screen sizing //TODO
     print("Attept to autosave")
-    pyautogui.moveTo(-373, 268, duration=0.2)
+    pyautogui.moveTo(-331, 257, duration=0.2)
     time.sleep(1)
     print("Sending click...")
     ArduinoDue.write(b"CLICK\n")
 
-    pyautogui.moveTo(-347, 690, duration=0.2)
+    pyautogui.moveTo( -483, 672, duration=0.2)
     time.sleep(2)
     print("Sending click...")
     ArduinoDue.write(b"CLICK\n")
@@ -104,10 +132,10 @@ def saveImage(): #Highly sensitive to screen sizing //TODO
 ### Setup ###
 move_distance = (0, 0)
 last_move_distance = (0, 0)
-calibration_factor_x = 0.0091  # Scale of pixels to distance movement
+calibration_factor_x = 0.0098  # seconds/ pixel # Scale of pixels to distance movement
 calibration_factor_y = 0.0079  # Scale of pixels to distance movement
-backlash_x_constant = 1.6
-backlash_y_constant = 1.5
+backlash_x_constant = 1.46
+backlash_y_constant = 1.46
 
 just_scanned = False
 calibration_factor = calibration_factor_x , calibration_factor_y #Tuple up for compact code
@@ -133,16 +161,22 @@ while True:
         print("Moving to get onto skincell")
         next_point = findBiggestSkincellFileName("images/currentPosition.JPG")
         print("Biggest nearby skincell detected at ", next_point)
+        if next_point!=None:
+            current_cantelever_position = (298,319) #This should be automated //TODO
+            last_move_distance = move_distance
+            move_distance = tupleSubtract(next_point,current_cantelever_position)
+            print("Distance to move ", move_distance)
 
-        current_cantelever_position = (298,319) #This should be automated //TODO
-        last_move_distance = move_distance
-        move_distance = tupleSubtract(next_point,current_cantelever_position)
-        print("Distance to move ", move_distance)
+            ##Would like to only use 1 single Arduino //TODO get code for "Uno"
 
-        ##Would like to only use 1 single Arduino //TODO get code for "Uno"
+        else: # we dont have target 
+            lastX , lastY = last_move_distance
+            move_distance = lastX * -2 , lastY * -2
+            last_move_distance = move_distance
+            print("We didnt find any targets, going back")
 
-        # Determine backlash based on direction change
         if last_move_distance!=(0,0): #Dont go on first round
+                # Determine backlash based on direction change
             backlash_x = backlash_x_constant if sign(move_distance[0]) != sign(last_move_distance[0]) else 0
             backlash_y = backlash_y_constant if sign(move_distance[1]) != sign(last_move_distance[1]) else 0
             backlash_constant = (backlash_x, backlash_y)
@@ -164,3 +198,4 @@ while True:
     print("End of loop! Sleeping.")
     time.sleep(7) #Can be lowered for production runs
     print("Done sleeping!")
+
