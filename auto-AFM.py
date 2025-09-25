@@ -34,7 +34,6 @@ def servomove(move_distance, calibration_factor, backlash):
             print("Doing backlash compensation")
             move_with_repeats('U', backlash[1])
             print("Backlash movement done")
-        time.sleep(3)
         print("Starting linear move")
 
         move_with_repeats('U', abs(y) * calibration_factor[1])
@@ -44,17 +43,15 @@ def servomove(move_distance, calibration_factor, backlash):
             print("Doing backlash compensation")
             move_with_repeats('D', backlash[1])
             print("Backlash movement done")
-        time.sleep(3)
         print("Starting linear move")
 
         move_with_repeats('D', abs(y) * calibration_factor[1])
-
+    time.sleep(1)
     if x > 0:
         if backlash[0]!=0:
             print("Doing backlash compensation")
             move_with_repeats('R', backlash[0])
             print("Backlash movement done")
-        time.sleep(3)
         print("Starting linear move")
 
         move_with_repeats('R', abs(x) * calibration_factor[0])
@@ -65,7 +62,6 @@ def servomove(move_distance, calibration_factor, backlash):
             print("Doing backlash compensation")
             move_with_repeats('L', backlash[0])
             print("Backlash movement done")
-        time.sleep(3)
         print("Starting linear move")
         move_with_repeats('L', abs(x) * calibration_factor[0])
 
@@ -115,12 +111,12 @@ def saveImage(): #Highly sensitive to screen sizing //TODO
     ArduinoDue.write(b"CLICK\n")
 
     pyautogui.moveTo( -483, 672, duration=0.2)
-    time.sleep(2)
+    time.sleep(1)
     print("Sending click...")
     ArduinoDue.write(b"CLICK\n")
 
     pyautogui.moveTo(-913, 529, duration=0.2)
-    time.sleep(2)
+    time.sleep(1)
     print("Sending click...")
     ArduinoDue.write(b"CLICK\n")
 
@@ -134,8 +130,8 @@ move_distance = (0, 0)
 last_move_distance = (0, 0)
 calibration_factor_x = 0.01  # seconds/ pixel # Scale of pixels to distance movement
 calibration_factor_y = 0.0082  # Scale of pixels to distance movement
-backlash_x_constant = 1.46
-backlash_y_constant = 1.46
+backlash_x_constant = 1.44
+backlash_y_constant = 1.64
 
 just_scanned = False
 calibration_factor = calibration_factor_x , calibration_factor_y #Tuple up for compact code
@@ -196,6 +192,6 @@ while True:
     
 
     print("End of loop! Sleeping.")
-    time.sleep(7) #Can be lowered for production runs
+    time.sleep(2) #Can be lowered for production runs
     print("Done sleeping!")
 
