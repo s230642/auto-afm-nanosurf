@@ -1,5 +1,5 @@
 import cv2 
-from numpy import pi, sum as npsum
+from numpy import pi,uint8, sum as npsum
 from skimage.morphology import erosion
 from skimage.morphology import disk 
 
@@ -10,6 +10,8 @@ from skimage.morphology import disk
 erosion_disk_size = 3
 threshhold_for_binary = 115
 circularity_limit = 0.16
+threshhold_for_binary_cantelever_on_skincell = 95  # adjust if needed
+
 
 #######################################
 ######### Functions in use ############
@@ -70,10 +72,13 @@ def labelCurrentImage():
 
 
 def onSkincell(image):
-    cropped_image = image[310:330, 280:325] # crops like (y1:y2, x1:x2)
-    gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+    cropped_image = image[310:335, 270:325]  # crops like (y1:y2, x1:x2)
+    gray_cropped = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
 
-    return npsum(gray)<85000 #DARK IMAGE MEANS MORE SKIN
+    _, binary = cv2.threshold(gray_cropped, threshhold_for_binary_cantelever_on_skincell, 255, cv2.THRESH_BINARY_INV)
+    binarysum = npsum(binary)
+    print("Skincounter is: ", binarysum)
+    return binarysum > 120000
 
 def onSkincellFile(file):
     image = cv2.imread(file)
@@ -177,10 +182,13 @@ def findBiggestSkincellVisual(image):
 def fullDebug():
     image = cv2.imread("images/currentPosition.jpg")
     coordinates, output = findBiggestSkincellVisual(image)
-    print(coordinates)
+    print("---------------")
+    print("Coordinates: " ,  coordinates)
+    print("On skincell: ", onSkincell(image))
+    print("---------------")
     cv2.imshow("Selected area", output)
     labelCurrentImage()
     cv2.waitKey()
     cv2.destroyAllWindows()
 
-#fullDebug()
+#print("Currently on skincell is: ", onSkincellFile("images/currentPosition_after_one_move.jpg"))
