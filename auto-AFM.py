@@ -1,5 +1,5 @@
 import pyautogui
-from computervision_new import findBiggestSkincellFileName, onSkincellFile
+from computervision_new import findBiggestSkincellFileName, onSkincellFile, centering
 
 
 ##Arduino setup
@@ -18,6 +18,8 @@ while True:
         break
 
 def servomove(move_distance, calibration_factor, backlash):
+    if move_distance == None:
+        return
     x, y = move_distance
     stop = 'S'
 
@@ -70,6 +72,8 @@ def sign(n):
     return (n > 0) - (n < 0)
 
 def tupleSubtract(t1, t2):
+    if t1 == None or t2 == None:
+        return None
     return t1[0] - t2[0] , t1[1] - t2[1]
 
 def scan():
@@ -105,12 +109,12 @@ def scan():
 
 def saveImage(): #Highly sensitive to screen sizing //TODO
     print("Attept to autosave")
-    pyautogui.moveTo(-331, 257, duration=0.2)
+    pyautogui.moveTo(-348, 265, duration=0.2)
     time.sleep(1)
     print("Sending click...")
     ArduinoDue.write(b"CLICK\n")
 
-    pyautogui.moveTo( -483, 672, duration=0.2)
+    pyautogui.moveTo( -488, 789, duration=0.2)
     time.sleep(1)
     print("Sending click...")
     ArduinoDue.write(b"CLICK\n")
@@ -149,8 +153,23 @@ while True:
     print("Currently on skincell is: ", oncell)
 
     if oncell and (not just_scanned):
-        print("We are on a skincell, so we scan!")
+        print("We are on a skincell, apply final centering!")
+        saveImage()
+        time.sleep(1)
+        coordinates, _ = centering()
+        current_cantelever_position = (298,319) #This should be automated //TODO
+        move_distance = tupleSubtract(coordinates,current_cantelever_position)
+        print("Distance to move for centering", move_distance) ## //TODO Maybe its clever to only move half the distance? This way we can keep some bias to the initial endpoint
+        backlash_x = backlash_x_constant if sign(move_distance[0]) != sign(last_move_distance[0]) else 0
+        backlash_y = backlash_y_constant if sign(move_distance[1]) != sign(last_move_distance[1]) else 0
+        backlash_constant = (backlash_x, backlash_y)
+    
+        print("Current applied backlash: ", backlash_constant)
+        print("Centering!")
+        servomove(move_distance, calibration_factor, backlash_constant)
+        
         just_scanned = True
+        print("Starting scan!")
         scan()
 
     else:
@@ -159,9 +178,12 @@ while True:
         print("Biggest nearby skincell detected at ", next_point)
         if next_point!=None:
             current_cantelever_position = (298,319) #This should be automated //TODO
-            last_move_distance = move_distance
+            
             move_distance = tupleSubtract(next_point,current_cantelever_position)
+            last_move_distance = move_distance
+            
             print("Distance to move ", move_distance)
+
 
             ##Would like to only use 1 single Arduino //TODO get code for "Uno"
 

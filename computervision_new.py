@@ -191,4 +191,52 @@ def fullDebug():
     cv2.waitKey()
     cv2.destroyAllWindows()
 
-#print("Currently on skincell is: ", onSkincellFile("images/currentPosition_after_one_move.jpg"))
+import numpy as np
+
+
+def centering():
+    image = cv2.imread("images/currentPosition.jpg")
+    cropped_image = image[280:360, 235:355]  # crops like (y1:y2, x1:x2)
+    gray_cropped = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+
+    # Create binary mask where pixel values are between 60 and 100
+    binary_image = cv2.inRange(gray_cropped, 60, 100)
+
+    # Define kernel for morphological operations (e.g., 3x3 rectangle)
+    kernel = np.ones((5, 5), np.uint8)
+    
+    # Apply opening (erode then dilate) to remove noise
+    opened = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, kernel)
+
+    # Apply closing (dilate then erode) to fill small holes
+    closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel)
+    cv2.imshow("closed", closed)
+
+    contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    biggest_contour = None
+    max_area = 0
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        perimeter = cv2.arcLength(contour, True)
+        #cv2.drawContours(cropped_image, [contour], -1, (255, 0, 0), 2)  # green contour
+        if perimeter == 0:
+            continue  # avoid division by zer
+            
+        if area > max_area and area > 300:
+            biggest_contour = contour
+            max_area = area
+    if biggest_contour is not None:
+        M = cv2.moments(biggest_contour)
+        if M["m00"] > 1e-5:
+            cx = int(M["m10"] / M["m00"])
+            cy = int(M["m01"] / M["m00"])
+        else:
+            # fallback: bounding box center
+            x, y, w, h = cv2.boundingRect(biggest_contour)
+            cx, cy = x + w // 2, y + h // 2
+
+        cv2.circle(image, (cx+235, cy+280), 2, (0, 0, 255), -1)  # red dot
+        return (cx+235, cy+280), image  # return center + annotated image
+    else:
+        return None, image  # no valid contour found, just return original
