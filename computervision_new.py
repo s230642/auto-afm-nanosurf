@@ -210,7 +210,7 @@ def centering():
 
     # Apply closing (dilate then erode) to fill small holes
     closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel)
-    cv2.imshow("closed", closed)
+    #cv2.imshow("closed", closed)
 
     contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -219,7 +219,7 @@ def centering():
     for contour in contours:
         area = cv2.contourArea(contour)
         perimeter = cv2.arcLength(contour, True)
-        #cv2.drawContours(cropped_image, [contour], -1, (255, 0, 0), 2)  # green contour
+        cv2.drawContours(cropped_image, [contour], -1, (255, 0, 0), 2)  # green contour
         if perimeter == 0:
             continue  # avoid division by zer
             
@@ -240,3 +240,21 @@ def centering():
         return (cx+235, cy+280), image  # return center + annotated image
     else:
         return None, image  # no valid contour found, just return original
+"""
+coordinates , image = centering()
+
+print(coordinates)
+
+def tupleSubtract(t1, t2):
+    if t1 == None or t2 == None:
+        return None
+    return t1[0] - t2[0] , t1[1] - t2[1]
+
+current_cantelever_position = (301,322) #This should be automated //TODO
+move_distance = tupleSubtract(coordinates,current_cantelever_position)
+print("Distance to move for centering", move_distance) 
+
+
+cv2.imshow("image",image)
+cv2.waitKey()
+"""

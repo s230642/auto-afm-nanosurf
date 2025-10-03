@@ -79,7 +79,7 @@ backlash_y_constant = 1.64
 
 next_point = findBiggestSkincellFileName("images/currentPosition.JPG")
 print(next_point)
-current_cantelever_position = (298,325) #This should be automated //TODO
+current_cantelever_position = (301,322) #This should be automated //TODO
 
 move_distance = tupleSubtract(next_point,current_cantelever_position)
 

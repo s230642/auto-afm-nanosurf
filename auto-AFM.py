@@ -154,10 +154,9 @@ while True:
 
     if oncell and (not just_scanned):
         print("We are on a skincell, apply final centering!")
-        saveImage()
-        time.sleep(1)
+
         coordinates, _ = centering()
-        current_cantelever_position = (298,319) #This should be automated //TODO
+        current_cantelever_position = (305,310) #This should be automated //TODO
         move_distance = tupleSubtract(coordinates,current_cantelever_position)
         print("Distance to move for centering", move_distance) ## //TODO Maybe its clever to only move half the distance? This way we can keep some bias to the initial endpoint
         backlash_x = backlash_x_constant if sign(move_distance[0]) != sign(last_move_distance[0]) else 0
@@ -167,7 +166,7 @@ while True:
         print("Current applied backlash: ", backlash_constant)
         print("Centering!")
         servomove(move_distance, calibration_factor, backlash_constant)
-        
+        last_move_distance = move_distance
         just_scanned = True
         print("Starting scan!")
         scan()
@@ -177,11 +176,11 @@ while True:
         next_point = findBiggestSkincellFileName("images/currentPosition.JPG")
         print("Biggest nearby skincell detected at ", next_point)
         if next_point!=None:
-            current_cantelever_position = (298,319) #This should be automated //TODO
+            current_cantelever_position = (305,310) #This should be automated //TODO
             
             move_distance = tupleSubtract(next_point,current_cantelever_position)
             last_move_distance = move_distance
-            
+
             print("Distance to move ", move_distance)
 
 
@@ -190,13 +189,14 @@ while True:
         else: # we dont have target 
             lastX , lastY = last_move_distance
             move_distance = lastX * -2 , lastY * -2
-            last_move_distance = move_distance
+            
             print("We didnt find any targets, going back")
 
         if last_move_distance!=(0,0): #Dont go on first round
                 # Determine backlash based on direction change
             backlash_x = backlash_x_constant if sign(move_distance[0]) != sign(last_move_distance[0]) else 0
             backlash_y = backlash_y_constant if sign(move_distance[1]) != sign(last_move_distance[1]) else 0
+            last_move_distance = move_distance
             backlash_constant = (backlash_x, backlash_y)
        
             print("Current applied backlash: ", backlash_constant)
@@ -205,6 +205,7 @@ while True:
             print("this is first round")
             print("Doing backlash calibration")
             move_distance = (1,1) #Custom for first calibration round
+            last_move_distance = move_distance
             print("(Last) move distance set to (1 ,1 )")
             backlash_constant = (backlash_x_constant, backlash_y_constant)
             servomove(move_distance, calibration_factor, backlash_constant)
