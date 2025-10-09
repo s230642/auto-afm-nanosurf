@@ -240,6 +240,9 @@ def centering():
         return (cx+235, cy+280), image  # return center + annotated image
     else:
         return None, image  # no valid contour found, just return original
+
+
+
 """
 coordinates , image = centering()
 

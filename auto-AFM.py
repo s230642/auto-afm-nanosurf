@@ -83,14 +83,20 @@ def scan():
     time.sleep(1)
     print("Sending click...")
     ArduinoDue.write(b"CLICK\n")
-    print("For now, wait 20 minutes, then retract and keep going")
-    time.sleep(60*20)
-    print("We should be done imaging now!, stopping")
-    pyautogui.moveTo(-1377, 85, duration=0.2) #STOP button
+    print("For now, wait 4 minutes, then press finish")
+    time.sleep(60*4)
+    pyautogui.moveTo(-1330, 114, duration=0.2) #FINISH button
     time.sleep(1)
     print("Sending click...")
     ArduinoDue.write(b"CLICK\n")
-    time.sleep(3)
+    time.sleep(1)
+    pyautogui.moveTo(-980, 540, duration=0.2) #ok button
+    time.sleep(1)
+    print("Sending click...")
+    ArduinoDue.write(b"CLICK\n")
+    print("Now wait for image to finish")
+    time.sleep(60*15)
+    print("We should be done imaging now!, stopping")
     #Withdraw twice //TODO
     #print("Withdrawing")
     #pyautogui.moveTo(-1549, 78, duration=0.2)
@@ -144,6 +150,16 @@ movesum_y = 0
 just_scanned = False
 calibration_factor = calibration_factor_x , calibration_factor_y #Tuple up for compact code
 
+
+print("Doing backlash calibration")
+move_distance = (1,1) #Custom for first calibration round
+last_move_distance = move_distance
+print("(Last) move distance set to (1 ,1 )")
+backlash_constant = (backlash_x_constant, backlash_y_constant)
+servomove(move_distance, calibration_factor, backlash_constant)
+time.sleep(1)
+print("Backlash calibration done")
+
 ### Loop ###
 while True: 
     print(f"Current budget for movement is: ( {movesum_x} , {movesum_y} )" )
@@ -171,9 +187,17 @@ while True:
         print("Centering!")
         servomove(move_distance, calibration_factor, backlash_constant)
         last_move_distance = move_distance
-        just_scanned = True
-        print("Starting scan!")
-        scan()
+        print("Checking we still on skin")
+        saveImage()
+        #Need time for new file to appear in windows
+        print("Saving....")
+        time.sleep(1)
+
+        oncell = onSkincellFile("images/currentPosition.JPG")
+        if oncell:
+            just_scanned = True
+            print("Starting scan!")
+            scan()
 
     else:
         #Movement code
@@ -197,45 +221,32 @@ while True:
             
             print("We didnt find any targets, going back")
 
-        if last_move_distance!=(0,0): #Dont go on first round 
-            #TODO rebase to before loop for better readability 
-                # Determine backlash based on direction change
-            backlash_x = backlash_x_constant if sign(move_distance[0]) != sign(last_move_distance[0]) else 0
-            backlash_y = backlash_y_constant if sign(move_distance[1]) != sign(last_move_distance[1]) else 0
-            last_move_distance = move_distance
-            backlash_constant = (backlash_x, backlash_y)
-            if (abs(movesum_x+move_distance[0]) > movement_pixel_budget) | (abs(movesum_y+move_distance[1]) > movement_pixel_budget):
-                print("We cannot move this distance, too close to edge!")
-                if movesum_x>(movement_pixel_budget-500): #Too far east
-                    move_distance[0] = -500
-                if -1*movesum_x>(movement_pixel_budget-500): #Too far west
-                    move_distance[0] = 500
-                if movesum_y>(movement_pixel_budget-500): #Too far south
-                    move_distance[1] = -500
-                if -1*movesum_y>(movement_pixel_budget-500): #Too far north
-                    move_distance[1] = 500
+       
+           
+        backlash_x = backlash_x_constant if sign(move_distance[0]) != sign(last_move_distance[0]) else 0
+        backlash_y = backlash_y_constant if sign(move_distance[1]) != sign(last_move_distance[1]) else 0
+        last_move_distance = move_distance
+        backlash_constant = (backlash_x, backlash_y)
+        if (abs(movesum_x+move_distance[0]) > movement_pixel_budget) | (abs(movesum_y+move_distance[1]) > movement_pixel_budget):
+            print("We cannot move this distance, too close to edge!")
+            if movesum_x>(movement_pixel_budget-500): #Too far east
+                move_distance[0] = -500
+            if -1*movesum_x>(movement_pixel_budget-500): #Too far west
+                move_distance[0] = 500
+            if movesum_y>(movement_pixel_budget-500): #Too far south
+                move_distance[1] = -500
+            if -1*movesum_y>(movement_pixel_budget-500): #Too far north
+                move_distance[1] = 500
 
-            
-            movesum_x+=move_distance[0]
-            movesum_y+=move_distance[1]    
-            print("Current applied backlash: ", backlash_constant)
-            
-            servomove(move_distance, calibration_factor, backlash_constant)
-
-        else:
-            print("this is first round")
-            print("Doing backlash calibration")
-            move_distance = (1,1) #Custom for first calibration round
-            last_move_distance = move_distance
-            print("(Last) move distance set to (1 ,1 )")
-            backlash_constant = (backlash_x_constant, backlash_y_constant)
-            servomove(move_distance, calibration_factor, backlash_constant)
-            time.sleep(1)
-            print("Backlash calibration done")
         
-    
+        movesum_x+=move_distance[0]
+        movesum_y+=move_distance[1]    
+        print("Current applied backlash: ", backlash_constant)
+        
+        servomove(move_distance, calibration_factor, backlash_constant)
+
 
     print("End of loop! Sleeping.")
-    time.sleep(2) #Can be lowered for production runs
+    time.sleep(4) #Gives time for the servoes to move
     print("Done sleeping!")
 
