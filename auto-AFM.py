@@ -136,13 +136,17 @@ calibration_factor_x = 0.01  # seconds/ pixel # Scale of pixels to distance move
 calibration_factor_y = 0.0082  # Scale of pixels to distance movement
 backlash_x_constant = 1.44
 backlash_y_constant = 1.64
+movement_pixel_budget = 2500 # Estimate, //TODO test correctness of this
+movesum_x = 0
+movesum_y = 0
+
 
 just_scanned = False
 calibration_factor = calibration_factor_x , calibration_factor_y #Tuple up for compact code
 
 ### Loop ###
 while True: 
-
+    print(f"Current budget for movement is: ( {movesum_x} , {movesum_y} )" )
     saveImage()
 
     #Need time for new file to appear in windows
@@ -172,6 +176,7 @@ while True:
         scan()
 
     else:
+        #Movement code
         print("Moving to get onto skincell")
         next_point = findBiggestSkincellFileName("images/currentPosition.JPG")
         print("Biggest nearby skincell detected at ", next_point)
@@ -192,15 +197,31 @@ while True:
             
             print("We didnt find any targets, going back")
 
-        if last_move_distance!=(0,0): #Dont go on first round
+        if last_move_distance!=(0,0): #Dont go on first round 
+            #TODO rebase to before loop for better readability 
                 # Determine backlash based on direction change
             backlash_x = backlash_x_constant if sign(move_distance[0]) != sign(last_move_distance[0]) else 0
             backlash_y = backlash_y_constant if sign(move_distance[1]) != sign(last_move_distance[1]) else 0
             last_move_distance = move_distance
             backlash_constant = (backlash_x, backlash_y)
-       
+            if (abs(movesum_x+move_distance[0]) > movement_pixel_budget) | (abs(movesum_y+move_distance[1]) > movement_pixel_budget):
+                print("We cannot move this distance, too close to edge!")
+                if movesum_x>(movement_pixel_budget-500): #Too far east
+                    move_distance[0] = -500
+                if -1*movesum_x>(movement_pixel_budget-500): #Too far west
+                    move_distance[0] = 500
+                if movesum_y>(movement_pixel_budget-500): #Too far south
+                    move_distance[1] = -500
+                if -1*movesum_y>(movement_pixel_budget-500): #Too far north
+                    move_distance[1] = 500
+
+            
+            movesum_x+=move_distance[0]
+            movesum_y+=move_distance[1]    
             print("Current applied backlash: ", backlash_constant)
+            
             servomove(move_distance, calibration_factor, backlash_constant)
+
         else:
             print("this is first round")
             print("Doing backlash calibration")
@@ -211,7 +232,7 @@ while True:
             servomove(move_distance, calibration_factor, backlash_constant)
             time.sleep(1)
             print("Backlash calibration done")
-    
+        
     
 
     print("End of loop! Sleeping.")
