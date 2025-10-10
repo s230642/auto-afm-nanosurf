@@ -143,14 +143,15 @@ calibration_factor_y = 0.0082  # Scale of pixels to distance movement
 backlash_x_constant = 1.44
 backlash_y_constant = 1.64
 movement_pixel_budget = 2500 # Estimate, //TODO test correctness of this
-movesum_x = 0
-movesum_y = 0
+
+movesum_x = 0 #This can be changed for custom starting positions
+movesum_y = 0 #Custom starting positions are any position not in the center of the sample
 
 
 just_scanned = False
 calibration_factor = calibration_factor_x , calibration_factor_y #Tuple up for compact code
 
-
+""" 
 print("Doing backlash calibration")
 move_distance = (1,1) #Custom for first calibration round
 last_move_distance = move_distance
@@ -159,6 +160,7 @@ backlash_constant = (backlash_x_constant, backlash_y_constant)
 servomove(move_distance, calibration_factor, backlash_constant)
 time.sleep(1)
 print("Backlash calibration done")
+"""
 
 ### Loop ###
 while True: 

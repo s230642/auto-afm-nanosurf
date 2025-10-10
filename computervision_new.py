@@ -8,10 +8,10 @@ from skimage.morphology import disk
 #######################################
 
 erosion_disk_size = 3
-threshhold_for_binary = 115
+threshhold_for_binary = 145
 circularity_limit = 0.16
 threshhold_for_binary_cantelever_on_skincell = 95  # adjust if needed
-
+minimumArea = 250.0
 
 #######################################
 ######### Functions in use ############
@@ -30,16 +30,21 @@ def labelCurrentImage():
     eroded = erosion(binary, footprint_disk)
 
     # Find contours
-    contours, hierarchy = cv2.findContours(eroded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+    contours, hierarchy = cv2.findContours(eroded, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    
 
     # Convert to BGR so we can draw colored contours
     output = cv2.cvtColor(eroded, cv2.COLOR_GRAY2BGR)
 
     # Draw contours and print areas
     for i, contour in enumerate(contours):
+
         area = cv2.contourArea(contour)
-        if area>500.0 and area<5000.0:
+
+        if area>minimumArea and area<5000.0 and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1):
+                # If First_Child == -1, no holes
+            print(f"Contour no. {i} has hierarchy A of {hierarchy[0][i][3]}")
+            print(f"Contour no. {i} has hierarchy B of {hierarchy[0][i][2]}")
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)
             cv2.drawContours(output, [contour], -1, (0, 255, 0), 2)
             print(f"Contour no. {i} has area: {area}")
@@ -50,6 +55,8 @@ def labelCurrentImage():
             
             circularity = 4 * pi * (area / (perimeter * perimeter))
             print(f"Contour no. {i} has circularity: {circularity}")
+
+
             print("---------------")
             
             # Calculate contour centroid
@@ -91,12 +98,12 @@ def findBiggestSkincell(image):
     footprint_disk = disk(erosion_disk_size)
     eroded = erosion(binary, footprint_disk)
 
-    contours, _ = cv2.findContours(eroded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(eroded, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     biggest_contour = None
     max_area = 0
 
-    for contour in contours:
+    for i, contour in enumerate(contours):
         area = cv2.contourArea(contour)
         perimeter = cv2.arcLength(contour, True)
         
@@ -106,7 +113,7 @@ def findBiggestSkincell(image):
         circularity = 4 * pi * (area / (perimeter * perimeter))
         
         # Check both area range AND circularity
-        if 500.0 < area < 5000.0 and circularity > circularity_limit:
+        if minimumArea < area < 5000.0 and circularity > circularity_limit  and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1):
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)  # green contour
             
             if area > max_area:
@@ -140,28 +147,31 @@ def findBiggestSkincellVisual(image):
     footprint_disk = disk(erosion_disk_size)
     eroded = erosion(binary, footprint_disk)
     # Find contours
-    contours, _ = cv2.findContours(eroded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(eroded, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     biggest_contour = None
     max_area = 0
 
     # Draw all contours within area limits
-    for contour in contours:
-        area = cv2.contourArea(contour)
+    for i, contour in enumerate(contours):
+        contour_area = cv2.contourArea(contour)
         perimeter = cv2.arcLength(contour, True)
-        
+
+
         if perimeter == 0:
             continue  # avoid division by zero
         
-        circularity = 4 * pi * (area / (perimeter * perimeter))
+
+
+        circularity = 4 * pi * (contour_area / (perimeter * perimeter))
         
         # Check both area range AND circularity
-        if 500.0 < area < 5000.0 and circularity > circularity_limit:
+        if minimumArea < contour_area < 5000.0 and circularity > circularity_limit  and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1):
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)  # green contour
             
-            if area > max_area:
+            if contour_area > max_area:
                 biggest_contour = contour
-                max_area = area
+                max_area = contour_area
 
     # Mark the biggest one with a red dot
     if biggest_contour is not None:
@@ -212,7 +222,7 @@ def centering():
     closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel)
     #cv2.imshow("closed", closed)
 
-    contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(closed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     biggest_contour = None
     max_area = 0
@@ -241,7 +251,7 @@ def centering():
     else:
         return None, image  # no valid contour found, just return original
 
-
+fullDebug()
 
 """
 coordinates , image = centering()

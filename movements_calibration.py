@@ -84,4 +84,4 @@ current_cantelever_position = (301,322) #This should be automated //TODO
 move_distance = tupleSubtract(next_point,current_cantelever_position)
 
 print(move_distance)
-servomove((-2000,-2000), (calibration_factor_x,calibration_factor_y), (backlash_x_constant, backlash_y_constant))
+servomove(move_distance, (calibration_factor_x,calibration_factor_y), (0,0))
