@@ -113,7 +113,7 @@ def findBiggestSkincell(image):
         circularity = 4 * pi * (area / (perimeter * perimeter))
         
         # Check both area range AND circularity
-        if minimumArea < area < 5000.0 and circularity > circularity_limit  and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1):
+        if ((minimumArea < area < 5000.0 and circularity > circularity_limit) or (2000 < area < 5000.0))  and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1):
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)  # green contour
             
             if area > max_area:
@@ -166,7 +166,7 @@ def findBiggestSkincellVisual(image):
         circularity = 4 * pi * (contour_area / (perimeter * perimeter))
         
         # Check both area range AND circularity
-        if minimumArea < contour_area < 5000.0 and circularity > circularity_limit  and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1):
+        if ((minimumArea < contour_area < 5000.0 and circularity > circularity_limit) or (2000 < contour_area < 5000.0))  and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1):
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)  # green contour
             
             if contour_area > max_area:
@@ -251,7 +251,7 @@ def centering():
     else:
         return None, image  # no valid contour found, just return original
 
-#fullDebug()
+fullDebug()
 
 """
 coordinates , image = centering()
