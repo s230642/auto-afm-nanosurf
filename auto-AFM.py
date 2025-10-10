@@ -188,7 +188,7 @@ while True:
             print("Centering!")
             servomove(move_distance, calibration_factor, backlash_constant)
             last_move_distance = move_distance
-            
+
         print("Checking we still on skin")
         saveImage()
         #Need time for new file to appear in windows
@@ -204,6 +204,7 @@ while True:
     else:
         #Movement code
         print("Moving to get onto skincell")
+        just_scanned = False
         next_point = findBiggestSkincellFileName("images/currentPosition.JPG")
         print("Biggest nearby skincell detected at ", next_point)
         if next_point!=None:
