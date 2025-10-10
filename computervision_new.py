@@ -251,7 +251,7 @@ def centering():
     else:
         return None, image  # no valid contour found, just return original
 
-fullDebug()
+#fullDebug()
 
 """
 coordinates , image = centering()

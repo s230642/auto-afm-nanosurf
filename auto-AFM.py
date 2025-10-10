@@ -151,7 +151,6 @@ movesum_y = 0 #Custom starting positions are any position not in the center of t
 just_scanned = False
 calibration_factor = calibration_factor_x , calibration_factor_y #Tuple up for compact code
 
-""" 
 print("Doing backlash calibration")
 move_distance = (1,1) #Custom for first calibration round
 last_move_distance = move_distance
@@ -160,7 +159,6 @@ backlash_constant = (backlash_x_constant, backlash_y_constant)
 servomove(move_distance, calibration_factor, backlash_constant)
 time.sleep(1)
 print("Backlash calibration done")
-"""
 
 ### Loop ###
 while True: 
@@ -181,14 +179,16 @@ while True:
         current_cantelever_position = (305,310) #This should be automated //TODO
         move_distance = tupleSubtract(coordinates,current_cantelever_position)
         print("Distance to move for centering", move_distance) ## //TODO Maybe its clever to only move half the distance? This way we can keep some bias to the initial endpoint
-        backlash_x = backlash_x_constant if sign(move_distance[0]) != sign(last_move_distance[0]) else 0
-        backlash_y = backlash_y_constant if sign(move_distance[1]) != sign(last_move_distance[1]) else 0
-        backlash_constant = (backlash_x, backlash_y)
-    
-        print("Current applied backlash: ", backlash_constant)
-        print("Centering!")
-        servomove(move_distance, calibration_factor, backlash_constant)
-        last_move_distance = move_distance
+        if coordinates != None: 
+            backlash_x = backlash_x_constant if sign(move_distance[0]) != sign(last_move_distance[0]) else 0
+            backlash_y = backlash_y_constant if sign(move_distance[1]) != sign(last_move_distance[1]) else 0
+            backlash_constant = (backlash_x, backlash_y)
+        
+            print("Current applied backlash: ", backlash_constant)
+            print("Centering!")
+            servomove(move_distance, calibration_factor, backlash_constant)
+            last_move_distance = move_distance
+            
         print("Checking we still on skin")
         saveImage()
         #Need time for new file to appear in windows
@@ -210,7 +210,6 @@ while True:
             current_cantelever_position = (305,310) #This should be automated //TODO
             
             move_distance = tupleSubtract(next_point,current_cantelever_position)
-            last_move_distance = move_distance
 
             print("Distance to move ", move_distance)
 
@@ -229,16 +228,16 @@ while True:
         backlash_y = backlash_y_constant if sign(move_distance[1]) != sign(last_move_distance[1]) else 0
         last_move_distance = move_distance
         backlash_constant = (backlash_x, backlash_y)
-        if (abs(movesum_x+move_distance[0]) > movement_pixel_budget) | (abs(movesum_y+move_distance[1]) > movement_pixel_budget):
+        if (abs(movesum_x+move_distance[0]) > movement_pixel_budget) or (abs(movesum_y+move_distance[1]) > movement_pixel_budget):
             print("We cannot move this distance, too close to edge!")
             if movesum_x>(movement_pixel_budget-500): #Too far east
-                move_distance[0] = -500
+                move_distance = (-500, move_distance[1])
             if -1*movesum_x>(movement_pixel_budget-500): #Too far west
-                move_distance[0] = 500
+                move_distance = (500, move_distance[1])
             if movesum_y>(movement_pixel_budget-500): #Too far south
-                move_distance[1] = -500
+                move_distance = (move_distance[0],-500)
             if -1*movesum_y>(movement_pixel_budget-500): #Too far north
-                move_distance[1] = 500
+                move_distance = (move_distance[0],500)
 
         
         movesum_x+=move_distance[0]
