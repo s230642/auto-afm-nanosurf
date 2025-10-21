@@ -115,7 +115,7 @@ def scan():
 
 def saveImage(): #Highly sensitive to screen sizing //TODO
     print("Attept to autosave")
-    pyautogui.moveTo(-348, 265, duration=0.2)
+    pyautogui.moveTo(-253, 258, duration=0.2)
     time.sleep(1)
     print("Sending click...")
     ArduinoDue.write(b"CLICK\n")
@@ -188,6 +188,7 @@ while True:
             print("Centering!")
             servomove(move_distance, calibration_factor, backlash_constant)
             last_move_distance = move_distance
+            time.sleep(1.5)
 
         print("Checking we still on skin")
         saveImage()

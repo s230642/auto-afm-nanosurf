@@ -8,7 +8,7 @@ from skimage.morphology import disk
 #######################################
 
 erosion_disk_size = 3
-threshhold_for_binary = 145
+threshhold_for_binary = 120
 circularity_limit = 0.16
 threshhold_for_binary_cantelever_on_skincell = 95  # adjust if needed
 minimumArea = 250.0
@@ -23,7 +23,7 @@ def labelCurrentImage():
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV)
+    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
     footprint_disk = disk(erosion_disk_size)
 
@@ -43,8 +43,6 @@ def labelCurrentImage():
 
         if area>minimumArea and area<5000.0 and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1):
                 # If First_Child == -1, no holes
-            print(f"Contour no. {i} has hierarchy A of {hierarchy[0][i][3]}")
-            print(f"Contour no. {i} has hierarchy B of {hierarchy[0][i][2]}")
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)
             cv2.drawContours(output, [contour], -1, (0, 255, 0), 2)
             print(f"Contour no. {i} has area: {area}")
@@ -94,7 +92,7 @@ def onSkincellFile(file):
 
 def findBiggestSkincell(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV)
+    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     footprint_disk = disk(erosion_disk_size)
     eroded = erosion(binary, footprint_disk)
 
@@ -143,7 +141,7 @@ def findBiggestSkincellFileName(file):
 def findBiggestSkincellVisual(image):
     # Convert to grayscale and threshold
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV)
+    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     footprint_disk = disk(erosion_disk_size)
     eroded = erosion(binary, footprint_disk)
     # Find contours
