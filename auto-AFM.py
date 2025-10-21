@@ -95,7 +95,9 @@ def scan():
     print("Sending click...")
     ArduinoDue.write(b"CLICK\n")
     print("Now wait for image to finish")
-    time.sleep(60*15)
+    for i in range(16):
+        print("there is", 16-i, "minutes left of scanning")
+        time.sleep(60)
     print("We should be done imaging now!, stopping")
     #Withdraw twice //TODO
     #print("Withdrawing")
