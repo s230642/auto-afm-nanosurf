@@ -8,7 +8,7 @@ from skimage.morphology import disk
 #######################################
 
 erosion_disk_size = 3
-threshhold_for_binary = 120
+threshhold_for_binary = 117
 circularity_limit = 0.16
 threshhold_for_binary_cantelever_on_skincell = 95  # adjust if needed
 minimumArea = 250.0
@@ -23,7 +23,7 @@ def labelCurrentImage():
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV )
 
     footprint_disk = disk(erosion_disk_size)
 
@@ -92,7 +92,7 @@ def onSkincellFile(file):
 
 def findBiggestSkincell(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV )
     footprint_disk = disk(erosion_disk_size)
     eroded = erosion(binary, footprint_disk)
 
@@ -141,7 +141,7 @@ def findBiggestSkincellFileName(file):
 def findBiggestSkincellVisual(image):
     # Convert to grayscale and threshold
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV )
     footprint_disk = disk(erosion_disk_size)
     eroded = erosion(binary, footprint_disk)
     # Find contours
@@ -249,7 +249,7 @@ def centering():
     else:
         return None, image  # no valid contour found, just return original
 
-fullDebug()
+#fullDebug() #TODO add a cropping so we dont have bottom and rightmost of image
 
 """
 coordinates , image = centering()

@@ -36,6 +36,8 @@ def servomove(move_distance, calibration_factor, backlash):
             print("Doing backlash compensation")
             move_with_repeats('U', backlash[1])
             print("Backlash movement done")
+            time.sleep(1)
+
         print("Starting linear move")
 
         move_with_repeats('U', abs(y) * calibration_factor[1])
@@ -45,15 +47,20 @@ def servomove(move_distance, calibration_factor, backlash):
             print("Doing backlash compensation")
             move_with_repeats('D', backlash[1])
             print("Backlash movement done")
+            time.sleep(1)
+
         print("Starting linear move")
 
         move_with_repeats('D', abs(y) * calibration_factor[1])
-    time.sleep(1)
+    print("Swapping axis")
+    time.sleep(2)
     if x > 0:
         if backlash[0]!=0:
             print("Doing backlash compensation")
             move_with_repeats('R', backlash[0])
             print("Backlash movement done")
+            time.sleep(1)
+
         print("Starting linear move")
 
         move_with_repeats('R', abs(x) * calibration_factor[0])
@@ -64,6 +71,7 @@ def servomove(move_distance, calibration_factor, backlash):
             print("Doing backlash compensation")
             move_with_repeats('L', backlash[0])
             print("Backlash movement done")
+            time.sleep(1)
         print("Starting linear move")
         move_with_repeats('L', abs(x) * calibration_factor[0])
 
@@ -140,10 +148,10 @@ def saveImage(): #Highly sensitive to screen sizing //TODO
 ### Setup ###
 move_distance = (0, 0)
 last_move_distance = (0, 0)
-calibration_factor_x = 0.01  # seconds/ pixel # Scale of pixels to distance movement
+calibration_factor_x = 0.0082  # seconds/ pixel # Scale of pixels to distance movement
 calibration_factor_y = 0.0082  # Scale of pixels to distance movement
-backlash_x_constant = 1.44
-backlash_y_constant = 1.64
+backlash_x_constant = 1.40
+backlash_y_constant = 1.40
 movement_pixel_budget = 2500 # Estimate, //TODO test correctness of this
 
 movesum_x = 0 #This can be changed for custom starting positions
