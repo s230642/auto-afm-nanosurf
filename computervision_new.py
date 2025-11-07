@@ -7,11 +7,13 @@ from skimage.morphology import disk
 ######### Global variables ############
 #######################################
 
-erosion_disk_size = 3
+erosion_disk_size = 2
 threshhold_for_binary = 117
 circularity_limit = 0.16
 threshhold_for_binary_cantelever_on_skincell = 95  # adjust if needed
-minimumArea = 250.0
+minimumArea = 100.0
+maximumArea = 1000.0
+
 
 #######################################
 ######### Functions in use ############
@@ -23,12 +25,13 @@ def labelCurrentImage():
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV )
+    binary = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV , 57,50)
 
     footprint_disk = disk(erosion_disk_size)
 
     eroded = erosion(binary, footprint_disk)
 
+    cv2.imshow("Eroed", eroded)
     # Find contours
     contours, hierarchy = cv2.findContours(eroded, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
@@ -40,8 +43,16 @@ def labelCurrentImage():
     for i, contour in enumerate(contours):
 
         area = cv2.contourArea(contour)
+        M = cv2.moments(contour)
 
-        if area>minimumArea and area<5000.0 and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1):
+        if M["m00"] > 1e-5:  # avoid division by zero
+            cx = int(M["m10"] / M["m00"])
+            cy = int(M["m01"] / M["m00"])
+        else:
+            # fallback: bounding box center
+            x, y, w, h = cv2.boundingRect(contour)
+            cx, cy = x + w // 2, y + h // 2
+        if area>minimumArea and area<maximumArea and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1)and not(290 <= cx <= 315 and 175 <= cy <= 330):
                 # If First_Child == -1, no holes
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)
             cv2.drawContours(output, [contour], -1, (0, 255, 0), 2)
@@ -70,7 +81,7 @@ def labelCurrentImage():
 
     # Show results
     cv2.imshow("Image with contours", image)
-    cv2.imshow("Contours Highlighted", output)
+    cv2.imshow("Binary", binary)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
@@ -92,7 +103,7 @@ def onSkincellFile(file):
 
 def findBiggestSkincell(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV )
+    binary = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV , 57,50)
     footprint_disk = disk(erosion_disk_size)
     eroded = erosion(binary, footprint_disk)
 
@@ -109,9 +120,17 @@ def findBiggestSkincell(image):
             continue  # avoid division by zero
         
         circularity = 4 * pi * (area / (perimeter * perimeter))
-        
+        M = cv2.moments(contour)
+
+        if M["m00"] > 1e-5:  # avoid division by zero
+            cx = int(M["m10"] / M["m00"])
+            cy = int(M["m01"] / M["m00"])
+        else:
+            # fallback: bounding box center
+            x, y, w, h = cv2.boundingRect(contour)
+            cx, cy = x + w // 2, y + h // 2
         # Check both area range AND circularity
-        if ((minimumArea < area < 5000.0 and circularity > circularity_limit) or (2000 < area < 5000.0))  and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1):
+        if (minimumArea < area < maximumArea and circularity > circularity_limit)  and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1)and not(290 <= cx <= 315 and 175 <= cy <= 330):
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)  # green contour
             
             if area > max_area:
@@ -141,7 +160,7 @@ def findBiggestSkincellFileName(file):
 def findBiggestSkincellVisual(image):
     # Convert to grayscale and threshold
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, binary = cv2.threshold(gray, threshhold_for_binary, 255, cv2.THRESH_BINARY_INV )
+    binary = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV , 57,50)
     footprint_disk = disk(erosion_disk_size)
     eroded = erosion(binary, footprint_disk)
     # Find contours
@@ -158,13 +177,20 @@ def findBiggestSkincellVisual(image):
 
         if perimeter == 0:
             continue  # avoid division by zero
-        
+        M = cv2.moments(contour)
+        if M["m00"] > 1e-5:
+            cx = int(M["m10"] / M["m00"])
+            cy = int(M["m01"] / M["m00"])
+        else:
+            # fallback: bounding box center
+            x, y, w, h = cv2.boundingRect(biggest_contour)
+            cx, cy = x + w // 2, y + h // 2
 
 
         circularity = 4 * pi * (contour_area / (perimeter * perimeter))
         
         # Check both area range AND circularity
-        if ((minimumArea < contour_area < 5000.0 and circularity > circularity_limit) or (2000 < contour_area < 5000.0))  and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1):
+        if contour_area>minimumArea and contour_area<maximumArea and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1) and not(290 <= cx <= 315 and 175 <= cy <= 330):
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)  # green contour
             
             if contour_area > max_area:
@@ -249,7 +275,7 @@ def centering():
     else:
         return None, image  # no valid contour found, just return original
 
-#fullDebug() #TODO add a cropping so we dont have bottom and rightmost of image
+fullDebug() #TODO add a cropping so we dont have bottom and rightmost of image
 
 """
 coordinates , image = centering()
