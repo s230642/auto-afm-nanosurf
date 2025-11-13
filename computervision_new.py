@@ -9,7 +9,7 @@ from skimage.morphology import disk
 
 erosion_disk_size = 2
 threshhold_for_binary = 117
-circularity_limit = 0.16
+circularity_limit = 0.2
 threshhold_for_binary_cantelever_on_skincell = 95  # adjust if needed
 minimumArea = 200.0
 maximumArea = 2000.0
@@ -47,6 +47,11 @@ def labelCurrentImage():
 
         area = cv2.contourArea(contour)
         M = cv2.moments(contour)
+        perimeter = cv2.arcLength(contour, True)
+        
+        if perimeter == 0:
+            continue  # avoid division by zero
+        circularity = 4 * pi * (area / (perimeter * perimeter))
 
         if M["m00"] > 1e-5:  # avoid division by zero
             cx = int(M["m10"] / M["m00"])
@@ -55,7 +60,7 @@ def labelCurrentImage():
             # fallback: bounding box center
             x, y, w, h = cv2.boundingRect(contour)
             cx, cy = x + w // 2, y + h // 2
-        if area>minimumArea and area<maximumArea and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1)and not(290 <= cx <= 315 and 175 - top_crop <= cy <= 330 - top_crop):
+        if area>minimumArea and area<maximumArea and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1)and not(290 <= cx <= 315 and 175 - top_crop <= cy <= 330 - top_crop) and circularity > circularity_limit:
                 # If First_Child == -1, no holes
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)
             cv2.drawContours(output, [contour], -1, (0, 255, 0), 2)
@@ -153,7 +158,7 @@ def findBiggestSkincell(image):
             # fallback: bounding box center
             x, y, w, h = cv2.boundingRect(biggest_contour)
             cx, cy = x + w // 2, y + h // 2
-        return (cx, cy)
+        return (cx, cy+top_crop)
     else:
         return None  # no valid contour found
     
@@ -198,7 +203,7 @@ def findBiggestSkincellVisual(image):
         circularity = 4 * pi * (contour_area / (perimeter * perimeter))
         
         # Check both area range AND circularity
-        if contour_area>minimumArea and contour_area<maximumArea and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1) and not(290 <= cx <= 315 and 175 - top_crop <= cy <= 330 - top_crop):
+        if contour_area>minimumArea and contour_area<maximumArea and (hierarchy[0][i][3]==-1) and (hierarchy[0][i][2]==-1) and not(290 <= cx <= 315 and 175 - top_crop <= cy <= 330 - top_crop) and circularity > circularity_limit:
             cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)  # green contour
             
             if contour_area > max_area:
@@ -217,7 +222,7 @@ def findBiggestSkincellVisual(image):
             cx, cy = x + w // 2, y + h // 2
 
         cv2.circle(image, (cx, cy), 5, (0, 0, 255), -1)  # red dot
-        return (cx, cy), image  # return center + annotated image
+        return (cx, cy+top_crop), image  # return center + annotated image
     else:
         return None, image  # no valid contour found, just return original
 
@@ -285,7 +290,8 @@ def centering():
         return None, image  # no valid contour found, just return original
 
 fullDebug() #TODO add a cropping so we dont have bottom and rightmost of image
-
+next_point = findBiggestSkincellFileName("images/currentPosition.JPG")
+print(next_point)
 """
 coordinates , image = centering()
 
