@@ -72,10 +72,10 @@ def servomove(move_distance, calibration_factor, backlash):
 def tupleSubtract(t1, t2):
     return t1[0] - t2[0] , t1[1] - t2[1]
 
-calibration_factor_x = 0.01  # seconds/ pixel # Scale of pixels to distance movement
-calibration_factor_y = 0.0079  # Scale of pixels to distance movement
-backlash_x_constant = 1.40
-backlash_y_constant = 1.64
+calibration_factor_x = 0.0085  # seconds/ pixel # Scale of pixels to distance movement
+calibration_factor_y = 0.0113  # Scale of pixels to distance movement
+backlash_x_constant = 1.6
+backlash_y_constant = 2.6
 
 next_point = findBiggestSkincellFileName("images/currentPosition.JPG")
 print(next_point)

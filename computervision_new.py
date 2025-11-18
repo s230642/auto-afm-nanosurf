@@ -290,8 +290,7 @@ def centering():
         return None, image  # no valid contour found, just return original
 
 fullDebug() #TODO add a cropping so we dont have bottom and rightmost of image
-next_point = findBiggestSkincellFileName("images/currentPosition.JPG")
-print(next_point)
+
 """
 coordinates , image = centering()
 
