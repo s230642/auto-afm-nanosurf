@@ -234,7 +234,7 @@ def fullDebug():
     print("Coordinates: " ,  coordinates)
     print("On skincell: ", onSkincell(image))
     print("---------------")
-    
+    cv2.imshow("Contours on image",output)
     labelCurrentImage()
     cv2.waitKey()
     cv2.destroyAllWindows()
@@ -289,7 +289,7 @@ def centering():
     else:
         return None, image  # no valid contour found, just return original
 
-#fullDebug()
+fullDebug()
 
 """
 coordinates , image = centering()
