@@ -146,6 +146,7 @@ def saveImage(): #Highly sensitive to screen sizing //TODO
 
 
 ### Setup ###
+images = 12 #Number of images to take
 move_distance = (0, 0)
 last_move_distance = (0, 0)
 calibration_factor_x = 0.0085  # seconds/ pixel # Scale of pixels to distance movement
@@ -171,7 +172,7 @@ time.sleep(1)
 print("Backlash calibration done")
 
 ### Loop ###
-while True: 
+while images>0: 
     print(f"Current budget for movement is: ( {movesum_x} , {movesum_y} )" )
     saveImage()
 
@@ -211,6 +212,7 @@ while True:
             just_scanned = True
             print("Starting scan!")
             scan()
+            images -= 1
 
     else:
         #Movement code

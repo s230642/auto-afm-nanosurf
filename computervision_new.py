@@ -7,12 +7,12 @@ from skimage.morphology import disk
 ######### Global variables ############
 #######################################
 
-erosion_disk_size = 2
+erosion_disk_size = 3
 threshhold_for_binary = 117
 circularity_limit = 0.2
 threshhold_for_binary_cantelever_on_skincell = 95  # adjust if needed
 minimumArea = 200.0
-maximumArea = 2000.0
+maximumArea = 20000.0
 blocksize_adaptive_thresh = 57
 constant_adaptive_thresh = 20
 top_crop = 75
@@ -88,7 +88,8 @@ def labelCurrentImage():
             cv2.putText(output, str(i), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
     # Show results
-    cv2.imshow("Binary", binary)
+    #cv2.imshow("Binary", binary)
+    cv2.imshow("Selected area", output)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
@@ -234,7 +235,7 @@ def fullDebug():
     print("Coordinates: " ,  coordinates)
     print("On skincell: ", onSkincell(image))
     print("---------------")
-    cv2.imshow("Selected area", output)
+    
     labelCurrentImage()
     cv2.waitKey()
     cv2.destroyAllWindows()
@@ -289,7 +290,7 @@ def centering():
     else:
         return None, image  # no valid contour found, just return original
 
-fullDebug() #TODO add a cropping so we dont have bottom and rightmost of image
+#fullDebug()
 
 """
 coordinates , image = centering()
