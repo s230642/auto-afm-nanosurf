@@ -149,7 +149,7 @@ def saveImage(): #Highly sensitive to screen sizing //TODO
 images = 12 #Number of images to take
 move_distance = (0, 0)
 last_move_distance = (0, 0)
-calibration_factor_x = 0.0085  # seconds/ pixel # Scale of pixels to distance movement
+calibration_factor_x = 0.0088  # seconds/ pixel # Scale of pixels to distance movement
 calibration_factor_y = 0.0113  # Scale of pixels to distance movement
 backlash_x_constant = 1.6
 backlash_y_constant = 2.6

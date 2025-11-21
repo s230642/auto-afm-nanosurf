@@ -96,7 +96,6 @@ def labelCurrentImage():
 
 
 def onSkincell(image):
-    image = image[top_crop:, :]
 
     cropped_image = image[310:335, 270:325]  # crops like (y1:y2, x1:x2)
     gray_cropped = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
