@@ -114,6 +114,7 @@ def scan():
 
 
 ### Setup ###
+images = 12 #Number of images to take
 move_distance = (0, 0)
 last_move_distance = (0, 0)
 calibration_factor_x = 0.0079  # seconds/ pixel # Scale of pixels to distance movement
