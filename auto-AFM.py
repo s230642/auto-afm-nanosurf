@@ -1,6 +1,7 @@
 import pyautogui
-from computervision_new import findBiggestSkincellFileName, onSkincellFile, centering
-
+from computervision_refactor import findBiggestSkincell, onSkincell
+from Backlash_code import primeForMovement
+import cv2
 
 ##Arduino setup
 import serial
@@ -8,6 +9,21 @@ import time
 
 ArduinoUno = serial.Serial("COM7", 9600, timeout=1)
 ArduinoDue = serial.Serial("COM6", 9600, timeout=1)
+
+##Cam setup
+top_view = cv2.VideoCapture(1,cv2.CAP_DSHOW)
+top_view.set(cv2.CAP_PROP_FRAME_WIDTH, 648)
+top_view.set(cv2.CAP_PROP_FRAME_HEIGHT, 484)
+
+## Camera warm up
+for i in range(10):
+    _ , current_topview = top_view.read()
+    print(i)
+
+print("Camera all warmed up! ")
+#cv2.imshow("Test topview", current_topview)
+#cv2.waitKey()
+#cv2.destroyAllWindows()
 
 # Wait for Arduino to be ready
 while True:
@@ -17,7 +33,7 @@ while True:
     if line == "READY":
         break
 
-def servomove(move_distance, calibration_factor, backlash):
+def servomove(move_distance, calibration_factor):
     if move_distance == None:
         return
     x, y = move_distance
@@ -32,47 +48,22 @@ def servomove(move_distance, calibration_factor, backlash):
         ArduinoUno.write(stop.encode())
 
     if y < 0:
-        if backlash[1]!=0:
-            print("Doing backlash compensation")
-            move_with_repeats('U', backlash[1])
-            print("Backlash movement done")
-            time.sleep(1)
-
-        print("Starting linear move")
-
+        primeForMovement('U', top_view, ArduinoUno)
         move_with_repeats('U', abs(y) * calibration_factor[1])
 
     elif y > 0:
-        if backlash[1]!=0:
-            print("Doing backlash compensation")
-            move_with_repeats('D', backlash[1])
-            print("Backlash movement done")
-            time.sleep(1)
-
-        print("Starting linear move")
-
+        primeForMovement('D', top_view, ArduinoUno)
         move_with_repeats('D', abs(y) * calibration_factor[1])
+    
     print("Swapping axis")
     time.sleep(2)
+    
     if x > 0:
-        if backlash[0]!=0:
-            print("Doing backlash compensation")
-            move_with_repeats('R', backlash[0])
-            print("Backlash movement done")
-            time.sleep(1)
-
-        print("Starting linear move")
-
+        primeForMovement('R', top_view, ArduinoUno)
         move_with_repeats('R', abs(x) * calibration_factor[0])
 
-
     elif x < 0:
-        if backlash[0]!=0:
-            print("Doing backlash compensation")
-            move_with_repeats('L', backlash[0])
-            print("Backlash movement done")
-            time.sleep(1)
-        print("Starting linear move")
+        primeForMovement('L', top_view, ArduinoUno)
         move_with_repeats('L', abs(x) * calibration_factor[0])
 
 
@@ -107,38 +98,15 @@ def scan():
         print("there is", 16-i, "minutes left of scanning")
         time.sleep(60)
     print("We should be done imaging now!, stopping")
-    #Withdraw twice //TODO
-    #print("Withdrawing")
-    #pyautogui.moveTo(-1549, 78, duration=0.2)
-    #time.sleep(1)
-    #print("Sending click...")
-    #ArduinoDue.write(b"CLICK\n")
-    #time.sleep(20)
+
     print("Withdrawing")
     pyautogui.moveTo(-1549, 78, duration=0.2) #Retract button
     time.sleep(1)
     print("Sending click...")
     ArduinoDue.write(b"CLICK\n")
-    time.sleep(20)
+    time.sleep(30)
     print("Scan and withdraw done")
 
-
-def saveImage(): #Highly sensitive to screen sizing //TODO
-    print("Attept to autosave")
-    pyautogui.moveTo(-253, 258, duration=0.2)
-    time.sleep(1)
-    print("Sending click...")
-    ArduinoDue.write(b"CLICK\n")
-
-    pyautogui.moveTo( -488, 789, duration=0.2)
-    time.sleep(1)
-    print("Sending click...")
-    ArduinoDue.write(b"CLICK\n")
-
-    pyautogui.moveTo(-913, 529, duration=0.2)
-    time.sleep(1)
-    print("Sending click...")
-    ArduinoDue.write(b"CLICK\n")
 
 ################################
 ##########   RUNCODE   #########
@@ -148,11 +116,9 @@ def saveImage(): #Highly sensitive to screen sizing //TODO
 ### Setup ###
 move_distance = (0, 0)
 last_move_distance = (0, 0)
-calibration_factor_x = 0.0082  # seconds/ pixel # Scale of pixels to distance movement
-calibration_factor_y = 0.0082  # Scale of pixels to distance movement
-backlash_x_constant = 1.40
-backlash_y_constant = 1.40
-movement_pixel_budget = 2500 # Estimate, //TODO test correctness of this
+calibration_factor_x = 0.0079  # seconds/ pixel # Scale of pixels to distance movement
+calibration_factor_y = 0.0079  # Scale of pixels to distance movement
+movement_pixel_budget = 1500 
 
 movesum_x = 0 #This can be changed for custom starting positions
 movesum_y = 0 #Custom starting positions are any position not in the center of the sample
@@ -160,67 +126,66 @@ movesum_y = 0 #Custom starting positions are any position not in the center of t
 
 just_scanned = False
 calibration_factor = calibration_factor_x , calibration_factor_y #Tuple up for compact code
-
-print("Doing backlash calibration")
-move_distance = (1,1) #Custom for first calibration round
-last_move_distance = move_distance
-print("(Last) move distance set to (1 ,1 )")
-backlash_constant = (backlash_x_constant, backlash_y_constant)
-servomove(move_distance, calibration_factor, backlash_constant)
-time.sleep(1)
-print("Backlash calibration done")
+scanned_blobs = []
+patch = None
+images_taken = 0
 
 ### Loop ###
-while True: 
+while images_taken<20: 
+    for _ in range(5):
+        rec, current_topview = top_view.read()
     print(f"Current budget for movement is: ( {movesum_x} , {movesum_y} )" )
-    saveImage()
-
+    if not rec:
+        print("failed to talk to optics\nexiting...")
+        break
     #Need time for new file to appear in windows
-    print("Saving....")
-    time.sleep(1)
 
-    oncell = onSkincellFile("images/currentPosition.JPG")
+    oncell = onSkincell(current_topview)
     print("Currently on skincell is: ", oncell)
+    
+    #cv2.imwrite("Current_cantelever_position.png",current_topview)
+    #cv2.imshow("Debugging, topview" , current_topview)
+    for j in range(len(scanned_blobs)):
+        scaled = cv2.resize(scanned_blobs[j], None, fx=3, fy=3, interpolation=cv2.INTER_LINEAR)
 
+        #cv2.imshow(f"{j} scanned patch", scaled)
+    #cv2.waitKey()
+    #cv2.destroyAllWindows()
+    
+    
     if oncell and (not just_scanned):
         print("We are on a skincell, apply final centering!")
-
-        coordinates, _ = centering()
-        current_cantelever_position = (305,310) #This should be automated //TODO
+        #cv2.waitKey()
+        coordinates, _ = None , None #centering() TODO centering not implemented in this version
+        current_cantelever_position = (295,241) #This should be automated //TODO
         move_distance = tupleSubtract(coordinates,current_cantelever_position)
-        print("Distance to move for centering", move_distance) ## //TODO Maybe its clever to only move half the distance? This way we can keep some bias to the initial endpoint
+        print("Distance to move for centering", move_distance) 
         if coordinates != None: 
-            backlash_x = backlash_x_constant if sign(move_distance[0]) != sign(last_move_distance[0]) else 0
-            backlash_y = backlash_y_constant if sign(move_distance[1]) != sign(last_move_distance[1]) else 0
-            backlash_constant = (backlash_x, backlash_y)
-        
-            print("Current applied backlash: ", backlash_constant)
             print("Centering!")
-            servomove(move_distance, calibration_factor, backlash_constant)
+            servomove(move_distance, calibration_factor)
             last_move_distance = move_distance
             time.sleep(1.5)
 
         print("Checking we still on skin")
-        saveImage()
-        #Need time for new file to appear in windows
-        print("Saving....")
-        time.sleep(1)
+        rec , frame = top_view.read()
 
-        oncell = onSkincellFile("images/currentPosition.JPG")
+        oncell = onSkincell(frame)
         if oncell:
             just_scanned = True
             print("Starting scan!")
+            if patch is not None:
+                scanned_blobs.append(patch)
             scan()
+            images_taken +=1
 
     else:
         #Movement code
         print("Moving to get onto skincell")
         just_scanned = False
-        next_point = findBiggestSkincellFileName("images/currentPosition.JPG")
+        next_point, patch = findBiggestSkincell(current_topview, scanned_blobs)
         print("Biggest nearby skincell detected at ", next_point)
         if next_point!=None:
-            current_cantelever_position = (305,310) #This should be automated //TODO
-            
+            current_cantelever_position = (295,241) #This should be automated //TODO
             move_distance = tupleSubtract(next_point,current_cantelever_position)
 
             print("Distance to move ", move_distance)
@@ -234,12 +199,6 @@ while True:
             
             print("We didnt find any targets, going back")
 
-       
-           
-        backlash_x = backlash_x_constant if sign(move_distance[0]) != sign(last_move_distance[0]) else 0
-        backlash_y = backlash_y_constant if sign(move_distance[1]) != sign(last_move_distance[1]) else 0
-        last_move_distance = move_distance
-        backlash_constant = (backlash_x, backlash_y)
         if (abs(movesum_x+move_distance[0]) > movement_pixel_budget) or (abs(movesum_y+move_distance[1]) > movement_pixel_budget):
             print("We cannot move this distance, too close to edge!")
             if movesum_x>(movement_pixel_budget-500): #Too far east
@@ -254,9 +213,9 @@ while True:
         
         movesum_x+=move_distance[0]
         movesum_y+=move_distance[1]    
-        print("Current applied backlash: ", backlash_constant)
         
-        servomove(move_distance, calibration_factor, backlash_constant)
+        
+        servomove(move_distance, calibration_factor)
 
 
     print("End of loop! Sleeping.")
